@@ -88,4 +88,12 @@
 
         </div>
     </div>
+    <template lwc:if={isCreateModalOpen}>
+        <c-item-create-modal
+            type-options={typeOptions}
+            family-options={familyOptions}
+            onclose={handleCloseCreateModal}
+            onsave={handleSaveNewItem}>
+        </c-item-create-modal>
+    </template>
 </template>

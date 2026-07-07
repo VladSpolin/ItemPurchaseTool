@@ -1,8 +1,13 @@
 import { LightningElement, api, wire, track } from 'lwc';
+// ДОБАВИЛИ: стандартные утилиты Salesforce для уведомлений и сброса кэша
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { refreshApex } from '@salesforce/apex';
 
 import getAccountDetails from '@salesforce/apex/ItemPurchaseController.getAccountDetails';
 import getItems from '@salesforce/apex/ItemPurchaseController.getItems';
 import checkIsManager from '@salesforce/apex/ItemPurchaseController.checkIsManager';
+// ДОБАВИЛИ: импорт метода создания товара из Apex
+import createItem from '@salesforce/apex/ItemPurchaseController.createItem';
 
 export default class ItemPurchaseTool extends LightningElement {
     @api recordId;
@@ -10,6 +15,10 @@ export default class ItemPurchaseTool extends LightningElement {
     account;
     isManager = false;
     @track items = [];
+    
+    // ДОБАВИЛИ: переменные для контроля модалки и хранения результата wire
+    isCreateModalOpen = false;
+    wiredItemsResult; 
     
     searchQuery = '';
     @track selectedTypes = [];
@@ -28,7 +37,6 @@ export default class ItemPurchaseTool extends LightningElement {
         { label: 'Family 3', value: 'Family 3' },
         { label: 'Family 4', value: 'Family 4' }
     ];
-
 
     // Загружаем данные Аккаунта
     @wire(getAccountDetails, { accountId: '$recordId' })
@@ -57,12 +65,15 @@ export default class ItemPurchaseTool extends LightningElement {
         return this.selectedFamilies.join(';');
     }
 
+    // ИЗМЕНИЛИ: теперь принимаем 'result' целиком, чтобы работал refreshApex
     @wire(getItems, { 
         searchStr: '$searchQuery', 
         familyFilter: '$familyFilterString', 
         typeFilter: '$typeFilterString' 
     })
-    wiredItems({ error, data }) {
+    wiredItems(result) {
+        this.wiredItemsResult = result; // Сохраняем объект для сброса кэша
+        const { error, data } = result; // Деструктурируем внутри
         if (data) {
             this.items = data;
         } else if (error) {
@@ -70,7 +81,6 @@ export default class ItemPurchaseTool extends LightningElement {
             this.items = [];
         }
     }
-
     
     // Подсчет количества товаров для отображения в фильтрах
     get itemsCount() {
@@ -81,7 +91,6 @@ export default class ItemPurchaseTool extends LightningElement {
         return this.itemsCount === 0;
     }
 
-
     handleSearch(event) {
         this.searchQuery = event.target.value;
     }
@@ -89,14 +98,58 @@ export default class ItemPurchaseTool extends LightningElement {
     handleFilterChange(event) {
         const filterName = event.target.name;
         if (filterName === 'Type') {
-            this.selectedTypes = event.detail.value; // event.detail.value содержит массив выбранных значений
+            this.selectedTypes = event.detail.value; 
         } else if (filterName === 'Family') {
             this.selectedFamilies = event.detail.value;
         }
     }
 
+    // ИЗМЕНИЛИ: теперь метод открывает модальное окно
     handleCreateItem() {
-        console.log('Тут мы будем открывать модальное окно создания товара');
+        this.isCreateModalOpen = true;
+    }
+
+    // ДОБАВИЛИ: метод закрытия модального окна без сохранения
+    handleCloseCreateModal() {
+        this.isCreateModalOpen = false;
+    }
+
+    // ДОБАВИЛИ: метод сохранения нового товара
+    handleSaveNewItem(event) {
+        const itemData = event.detail;
+
+        // Вызываем Apex-метод императивно и передаем ему поля из модалки
+        createItem({
+            name: itemData.name,
+            description: itemData.description,
+            family: itemData.family,
+            type: itemData.type,
+            price: itemData.price,
+            availableQuantity: itemData.quantity
+        })
+        .then(() => {
+            // Показываем зеленый Toast об успехе
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: 'Success!',
+                    message: 'New item was created successfully. Image fetched from Unsplash!',
+                    variant: 'success'
+                })
+            );
+            this.isCreateModalOpen = false; // Закрываем окно
+            return refreshApex(this.wiredItemsResult); // Обновляем список товаров на экране
+        })
+        .catch((error) => {
+            console.error('Error creating item:', error);
+            // Показываем красный Toast в случае ошибки
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: 'Error creating item',
+                    message: error.body ? error.body.message : error.message,
+                    variant: 'error'
+                })
+            );
+        });
     }
 
     handleOpenCart() {
