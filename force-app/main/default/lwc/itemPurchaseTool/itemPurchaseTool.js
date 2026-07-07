@@ -1,17 +1,13 @@
-import { LightningElement, api, wire, track } from 'lwc';
+import { LightningElement, api, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import { refreshApex } from '@salesforce/apex';
-// 1. ДОБАВИЛИ: Инструмент для перенаправления на другую страницу
 import { NavigationMixin } from 'lightning/navigation'; 
 
 import getAccountDetails from '@salesforce/apex/ItemPurchaseController.getAccountDetails';
 import getItems from '@salesforce/apex/ItemPurchaseController.getItems';
 import checkIsManager from '@salesforce/apex/ItemPurchaseController.checkIsManager';
 import createItem from '@salesforce/apex/ItemPurchaseController.createItem';
-// 2. ДОБАВИЛИ: Метод оформления заказа из бэкенда
 import checkout from '@salesforce/apex/ItemPurchaseController.checkout'; 
 
-// 3. ИЗМЕНИЛИ: Обернули наш класс в NavigationMixin, чтобы работали редиректы
 export default class ItemPurchaseTool extends NavigationMixin(LightningElement) {
     @api recordId;
 
@@ -20,12 +16,9 @@ export default class ItemPurchaseTool extends NavigationMixin(LightningElement) 
     @track items = [];
     
     isCreateModalOpen = false;
-    wiredItemsResult; 
-
     isDetailsModalOpen = false;
     selectedItemForDetails;
     
-    // 4. ДОБАВИЛИ: Переменные для корзины
     isCartModalOpen = false;
     @track cartItems = []; 
     
@@ -47,22 +40,10 @@ export default class ItemPurchaseTool extends NavigationMixin(LightningElement) 
         { label: 'Family 4', value: 'Family 4' }
     ];
 
-    @wire(getAccountDetails, { accountId: '$recordId' })
-    wiredAccount({ error, data }) {
-        if (data) {
-            this.account = data;
-        } else if (error) {
-            console.error('Error fetching account:', error);
-        }
-    }
-
-    @wire(checkIsManager)
-    wiredIsManager({ error, data }) {
-        if (data !== undefined) {
-            this.isManager = data;
-        } else if (error) {
-            console.error('Error checking manager status:', error);
-        }
+    connectedCallback() {
+        this.loadAccountDetails();
+        this.loadManagerStatus();
+        this.loadItems();
     }
 
     get typeFilterString() {
@@ -73,22 +54,6 @@ export default class ItemPurchaseTool extends NavigationMixin(LightningElement) 
         return this.selectedFamilies.join(';');
     }
 
-    @wire(getItems, { 
-        searchStr: '$searchQuery', 
-        familyFilter: '$familyFilterString', 
-        typeFilter: '$typeFilterString' 
-    })
-    wiredItems(result) {
-        this.wiredItemsResult = result;
-        const { error, data } = result;
-        if (data) {
-            this.items = data;
-        } else if (error) {
-            console.error('Error fetching items:', error);
-            this.items = [];
-        }
-    }
-    
     get itemsCount() {
         return this.items ? this.items.length : 0;
     }
@@ -97,8 +62,44 @@ export default class ItemPurchaseTool extends NavigationMixin(LightningElement) 
         return this.itemsCount === 0;
     }
 
+    loadAccountDetails() {
+        getAccountDetails({ accountId: this.recordId })
+            .then(data => {
+                this.account = data;
+            })
+            .catch(error => {
+                console.error('Error fetching account:', error);
+            });
+    }
+
+    loadManagerStatus() {
+        checkIsManager()
+            .then(data => {
+                this.isManager = data !== undefined ? data : false;
+            })
+            .catch(error => {
+                console.error('Error checking manager status:', error);
+            });
+    }
+
+    loadItems() {
+        getItems({ 
+            searchStr: this.searchQuery, 
+            familyFilter: this.familyFilterString, 
+            typeFilter: this.typeFilterString 
+        })
+        .then(data => {
+            this.items = data;
+        })
+        .catch(error => {
+            console.error('Error fetching items imperatively:', error);
+            this.items = [];
+        });
+    }
+
     handleSearch(event) {
         this.searchQuery = event.target.value;
+        this.loadItems(); // Живой поиск: обновляем данные при каждом вводе
     }
 
     handleFilterChange(event) {
@@ -108,6 +109,7 @@ export default class ItemPurchaseTool extends NavigationMixin(LightningElement) 
         } else if (filterName === 'Family') {
             this.selectedFamilies = event.detail.value;
         }
+        this.loadItems(); // Живые фильтры: обновляем данные при клике по чекбоксам
     }
 
     handleCreateItem() {
@@ -138,9 +140,9 @@ export default class ItemPurchaseTool extends NavigationMixin(LightningElement) 
                 })
             );
             this.isCreateModalOpen = false;
-            return refreshApex(this.wiredItemsResult);
+            this.loadItems(); // Автоматический перезапрос свежей витрины с картинкой
         })
-        .catch((error) => {
+        .catch(error => {
             console.error('Error creating item:', error);
             this.dispatchEvent(
                 new ShowToastEvent({
@@ -162,7 +164,6 @@ export default class ItemPurchaseTool extends NavigationMixin(LightningElement) 
         this.selectedItemForDetails = null;
     }
 
-
     handleOpenCart() {
         this.isCartModalOpen = true;
     }
@@ -173,7 +174,6 @@ export default class ItemPurchaseTool extends NavigationMixin(LightningElement) 
 
     handleAddToCart(event) {
         const item = event.detail;
-        
         const existingItemIndex = this.cartItems.findIndex(ci => ci.itemId === item.Id);
 
         if (existingItemIndex !== -1) {
@@ -224,7 +224,7 @@ export default class ItemPurchaseTool extends NavigationMixin(LightningElement) 
             
             this.isCartModalOpen = false;
             this.cartItems = [];
-            refreshApex(this.wiredItemsResult);
+            this.loadItems(); 
 
             this[NavigationMixin.Navigate]({
                 type: 'standard__recordPage',
@@ -235,7 +235,7 @@ export default class ItemPurchaseTool extends NavigationMixin(LightningElement) 
                 }
             });
         })
-        .catch((error) => {
+        .catch(error => {
             this.dispatchEvent(new ShowToastEvent({
                 title: 'Checkout Error',
                 message: error.body ? error.body.message : error.message,

@@ -4,32 +4,33 @@ public inherited sharing class UnsplashService {
     private static final String ENDPOINT = 'https://api.unsplash.com/search/photos?query=';
 
     public static String getImageUrl(String searchQuery) {
-        if (String.isBlank(searchQuery)) return null;
+        String query = String.isBlank(searchQuery) ? 'item' : searchQuery;
 
-        // Кодируем пробелы и спецсимволы в названии товара для URL
-        String encodedQuery = EncodingUtil.urlEncode(searchQuery, 'UTF-8');
+        try {
+            String encodedQuery = EncodingUtil.urlEncode(query, 'UTF-8');
 
-        HttpRequest req = new HttpRequest();
-        req.setEndpoint(ENDPOINT + encodedQuery);
-        req.setMethod('GET');
-        req.setHeader('Authorization', 'Client-ID ' + CLIENT_ID); // Передаем ключ авторизации
+            HttpRequest req = new HttpRequest();
+            req.setEndpoint(ENDPOINT + encodedQuery);
+            req.setMethod('GET');
+            req.setHeader('Authorization', 'Client-ID ' + CLIENT_ID);
+            req.setTimeout(6000); 
 
-        Http http = new Http();
-        HttpResponse res = http.send(req);
+            HttpResponse res = new Http().send(req);
 
-        if (res.getStatusCode() == 200) {
-            Map<String, Object> jsonBody = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
-            List<Object> results = (List<Object>) jsonBody.get('results');
-            
-            if (results != null && !results.isEmpty()) {
-                // Берем первую картинку из результатов
-                Map<String, Object> firstResult = (Map<String, Object>) results[0];
-                Map<String, Object> urls = (Map<String, Object>) firstResult.get('urls');
+            if (res.getStatusCode() == 200) {
+                Map<String, Object> jsonBody = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
+                List<Object> results = (List<Object>) jsonBody.get('results');
                 
-                return (String) urls.get('regular');
+                if (results != null && !results.isEmpty()) {
+                    Map<String, Object> firstResult = (Map<String, Object>) results[0];
+                    Map<String, Object> urls = (Map<String, Object>) firstResult.get('urls');
+                    return (String) urls.get('regular');
+                }
             }
+        } catch (Exception e) {
+            System.debug('Unsplash Callout Failed: ' + e.getMessage());
         }
         
-        return null; 
+        return null;
     }
 }

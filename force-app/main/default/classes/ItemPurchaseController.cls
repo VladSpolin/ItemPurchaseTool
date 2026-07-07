@@ -5,7 +5,7 @@ public with sharing class ItemPurchaseController {
         return AccountSelector.getAccountById(accountId);
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static List<Item__c> getItems(String searchKey, String familyFilter, String typeFilter) {
         return ItemSelector.getItemsByFilters(searchKey, familyFilter, typeFilter);
     }

@@ -1,6 +1,5 @@
 public inherited sharing class PurchaseService {
     
-    // Вспомогательный класс-обертка для JSON
     public class CartItemWrapper {
         public Id itemId;
         public Integer quantity;
@@ -61,15 +60,13 @@ public inherited sharing class PurchaseService {
         throw new AuraHandledException('Access Denied: Only managers can create items.');
     }
 
-    // 2. Получаем картинку из внешнего API по имени товара
     String imageUrl = null;
     try {
-        imageUrl = UnsplashService.getImageUrl(name);
+        imageUrl = UnsplashService.getImageUrl(type); 
     } catch (Exception e) {
         System.debug('Error fetching image from Unsplash: ' + e.getMessage());
     }
 
-    // 3. Сборка объекта (Инфраструктурный слой / Domain)
     Item__c newItem = new Item__c(
         Name = name,
         Description__c = description,
@@ -80,7 +77,6 @@ public inherited sharing class PurchaseService {
         Image__c = imageUrl
     );
 
-    // 4. Сохранение в базу данных
     insert newItem;
     return newItem.Id;
 }
