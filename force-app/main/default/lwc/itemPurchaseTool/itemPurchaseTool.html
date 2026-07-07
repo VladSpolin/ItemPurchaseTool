@@ -102,4 +102,11 @@
             onclose={handleCloseDetailsModal}>
         </c-item-details-modal>
     </template>
+    <template lwc:if={isCartModalOpen}>
+        <c-cart-modal
+            cart-items={cartItems}
+            onclose={handleCloseCart}
+            oncheckout={handleCheckoutProcess}>
+        </c-cart-modal>
+    </template>
 </template>
