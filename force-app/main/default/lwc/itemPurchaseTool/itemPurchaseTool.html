@@ -1,3 +1,89 @@
 <template>
-    
+    <div class="slds-box slds-theme_default slds-p-around_medium">
+        
+        <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_medium">
+            
+            <div>
+                <template lwc:if={isManager}>
+                    <lightning-button label="Create Item" variant="brand" onclick={handleCreateItem}></lightning-button>
+                </template>
+            </div>
+
+            <div class="slds-text-align_center slds-text-heading_small">
+                <template lwc:if={account}>
+                    <span class="slds-m-horizontal_medium"><strong>{account.Name}</strong></span>
+                    <span class="slds-m-horizontal_medium">{account.AccountNumber}</span>
+                    <span class="slds-m-horizontal_medium">{account.Industry}</span>
+                </template>
+                <template lwc:else>
+                    Loading Account...
+                </template>
+            </div>
+
+            <div>
+                <lightning-button label="Cart" variant="neutral" icon-name="utility:cart" onclick={handleOpenCart}></lightning-button>
+            </div>
+        </div>
+
+        <hr/>
+
+        <div class="slds-m-bottom_medium">
+            <lightning-input 
+                type="search" 
+                placeholder="Search by Name or Description..." 
+                onchange={handleSearch}>
+            </lightning-input>
+        </div>
+
+        <div class="slds-grid slds-gutters">
+            
+            <div class="slds-col slds-size_8-of-12">
+                <div class="slds-grid slds-wrap slds-gutters">
+                    
+                    <template for:each={items} for:item="item">
+                        <div key={item.Id} class="slds-col slds-size_1-of-2 slds-m-bottom_medium">
+                            <div class="slds-box slds-text-align_center">
+                                Карточка товара: {item.Name}
+                            </div>
+                        </div>
+                    </template>
+                    
+                    <template lwc:if={itemsEmpty}>
+                        <div class="slds-col slds-size_1-of-1 slds-text-align_center slds-m-top_large">
+                            No items found.
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <div class="slds-col slds-size_4-of-12">
+                <div class="slds-box slds-theme_shade">
+                    <div class="slds-text-heading_medium slds-m-bottom_small">FILTERS</div>
+                    
+                    <div class="slds-m-bottom_medium slds-text-color_success">
+                        <strong>Total listed items: {itemsCount}</strong>
+                    </div>
+
+                    <lightning-checkbox-group 
+                        name="Type"
+                        label="Type:"
+                        options={typeOptions}
+                        value={selectedTypes}
+                        onchange={handleFilterChange}>
+                    </lightning-checkbox-group>
+
+                    <div class="slds-m-top_medium"></div>
+
+                    <lightning-checkbox-group 
+                        name="Family"
+                        label="Family:"
+                        options={familyOptions}
+                        value={selectedFamilies}
+                        onchange={handleFilterChange}>
+                    </lightning-checkbox-group>
+                </div>
+            </div>
+
+        </div>
+    </div>
 </template>
