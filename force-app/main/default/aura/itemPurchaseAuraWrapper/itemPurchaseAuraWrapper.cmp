@@ -1,0 +1,10 @@
+<aura:component implements="lightning:isUrlAddressable" access="global">
+    <aura:attribute name="accountId" type="String" />
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <aura:handler name="change" value="{!v.pageReference}" action="{!c.doInit}"/>
+
+    <div class="slds-theme_default slds-p-around_medium" style="min-height: 100vh;">
+        <c:itemPurchaseTool recordId="{!v.accountId}"></c:itemPurchaseTool>
+    </div>
+</aura:component>
