@@ -19,4 +19,9 @@ public with sharing class ItemPurchaseController {
     public static Id checkout(Id accountId, String cartItemsJson) {
         return PurchaseService.processCheckout(accountId, cartItemsJson);
     }
+
+    @AuraEnabled
+public static Id createItem(String name, String description, String family, String type, Decimal price, Integer availableQuantity) {
+    return PurchaseService.createNewItem(name, description, family, type, price, availableQuantity);
+}
 }

@@ -55,4 +55,33 @@ public inherited sharing class PurchaseService {
             throw new AuraHandledException(e.getMessage());
         }
     }
+
+    public static Id createNewItem(String name, String description, String family, String type, Decimal price, Integer availableQuantity) {
+    if (UserSelector.getCurrentUser().IsManager__c != true) {
+        throw new AuraHandledException('Access Denied: Only managers can create items.');
+    }
+
+    // 2. Получаем картинку из внешнего API по имени товара
+    String imageUrl = null;
+    try {
+        imageUrl = UnsplashService.getImageUrl(name);
+    } catch (Exception e) {
+        System.debug('Error fetching image from Unsplash: ' + e.getMessage());
+    }
+
+    // 3. Сборка объекта (Инфраструктурный слой / Domain)
+    Item__c newItem = new Item__c(
+        Name = name,
+        Description__c = description,
+        Family__c = family,
+        Type__c = type,
+        Price__c = price,
+        AvailableQuantity__c = availableQuantity,
+        Image__c = imageUrl
+    );
+
+    // 4. Сохранение в базу данных
+    insert newItem;
+    return newItem.Id;
+}
 }
