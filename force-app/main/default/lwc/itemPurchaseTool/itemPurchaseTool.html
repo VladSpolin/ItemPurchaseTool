@@ -96,4 +96,10 @@
             onsave={handleSaveNewItem}>
         </c-item-create-modal>
     </template>
+    <template lwc:if={isDetailsModalOpen}>
+        <c-item-details-modal
+            item={selectedItemForDetails}
+            onclose={handleCloseDetailsModal}>
+        </c-item-details-modal>
+    </template>
 </template>

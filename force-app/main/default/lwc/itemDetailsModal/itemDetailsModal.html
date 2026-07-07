@@ -1,0 +1,50 @@
+<template>
+    <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+        <div class="slds-modal__container">
+            
+            <header class="slds-modal__header">
+                <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={handleClose}>
+                    <lightning-icon icon-name="utility:close" alternative-text="close" variant="inverse" size="small"></lightning-icon>
+                    <span class="slds-assistive-text">Close</span>
+                </button>
+                <h2 class="slds-text-heading_medium slds-hyphenate">{item.Name} Details</h2>
+            </header>
+            
+            <div class="slds-modal__content slds-p-around_medium">
+                <div class="slds-grid slds-gutters slds-wrap">
+                    
+                    <div class="slds-col slds-size_1-of-2 slds-text-align_center">
+                        <template lwc:if={item.Image__c}>
+                            <img src={item.Image__c} alt={item.Name} style="max-height: 250px; border-radius: 4px;" />
+                        </template>
+                        <template lwc:else>
+                            <div class="slds-box slds-text-color_weak slds-m-top_large">No Image Available</div>
+                        </template>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-2">
+                        <div class="slds-text-title_caps slds-m-bottom_xx-small">Description</div>
+                        <p class="slds-m-bottom_medium">{item.Description__c}</p>
+
+                        <div class="slds-text-title_caps slds-m-bottom_xx-small">Categorization</div>
+                        <p><strong>Type:</strong> {item.Type__c}</p>
+                        <p class="slds-m-bottom_medium"><strong>Family:</strong> {item.Family__c}</p>
+
+                        <div class="slds-text-title_caps slds-m-bottom_xx-small">Stock & Pricing</div>
+                        <p class="slds-text-color_success slds-text-heading_small">
+                            <strong>${item.Price__c}</strong>
+                        </p>
+                        <p>Available: {item.AvailableQuantity__c} pcs</p>
+                    </div>
+                </div>
+            </div>
+            
+            <footer class="slds-modal__footer">
+                <lightning-button label="Close" onclick={handleClose}></lightning-button>
+            </footer>
+
+        </div>
+    </section>
+    
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</template>

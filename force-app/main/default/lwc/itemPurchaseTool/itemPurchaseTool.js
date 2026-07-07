@@ -1,12 +1,10 @@
 import { LightningElement, api, wire, track } from 'lwc';
-// ДОБАВИЛИ: стандартные утилиты Salesforce для уведомлений и сброса кэша
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
 
 import getAccountDetails from '@salesforce/apex/ItemPurchaseController.getAccountDetails';
 import getItems from '@salesforce/apex/ItemPurchaseController.getItems';
 import checkIsManager from '@salesforce/apex/ItemPurchaseController.checkIsManager';
-// ДОБАВИЛИ: импорт метода создания товара из Apex
 import createItem from '@salesforce/apex/ItemPurchaseController.createItem';
 
 export default class ItemPurchaseTool extends LightningElement {
@@ -16,9 +14,11 @@ export default class ItemPurchaseTool extends LightningElement {
     isManager = false;
     @track items = [];
     
-    // ДОБАВИЛИ: переменные для контроля модалки и хранения результата wire
     isCreateModalOpen = false;
     wiredItemsResult; 
+
+    isDetailsModalOpen = false;
+    selectedItemForDetails;
     
     searchQuery = '';
     @track selectedTypes = [];
@@ -38,7 +38,6 @@ export default class ItemPurchaseTool extends LightningElement {
         { label: 'Family 4', value: 'Family 4' }
     ];
 
-    // Загружаем данные Аккаунта
     @wire(getAccountDetails, { accountId: '$recordId' })
     wiredAccount({ error, data }) {
         if (data) {
@@ -157,8 +156,13 @@ export default class ItemPurchaseTool extends LightningElement {
     }
 
     handleShowDetails(event) {
-        const selectedItem = event.detail;
-        console.log('Показываем детали для товара: ', selectedItem.Name);
+        this.selectedItemForDetails = event.detail; 
+        this.isDetailsModalOpen = true; 
+    }
+
+    handleCloseDetailsModal() {
+        this.isDetailsModalOpen = false;
+        this.selectedItemForDetails = null;
     }
 
     handleAddToCart(event) {
