@@ -102,4 +102,14 @@ export default class ItemPurchaseTool extends LightningElement {
     handleOpenCart() {
         console.log('Тут мы будем открывать корзину');
     }
+
+    handleShowDetails(event) {
+        const selectedItem = event.detail;
+        console.log('Показываем детали для товара: ', selectedItem.Name);
+    }
+
+    handleAddToCart(event) {
+        const itemToAdd = event.detail;
+        console.log('Добавляем в корзину товар: ', itemToAdd.Name);
+    }
 }

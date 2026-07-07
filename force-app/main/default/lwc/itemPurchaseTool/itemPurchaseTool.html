@@ -42,9 +42,11 @@
                     
                     <template for:each={items} for:item="item">
                         <div key={item.Id} class="slds-col slds-size_1-of-2 slds-m-bottom_medium">
-                            <div class="slds-box slds-text-align_center">
-                                Карточка товара: {item.Name}
-                            </div>
+                            <c-item-tile 
+                                item={item} 
+                                onshowdetails={handleShowDetails} 
+                                onaddtocart={handleAddToCart}>
+                            </c-item-tile>
                         </div>
                     </template>
                     

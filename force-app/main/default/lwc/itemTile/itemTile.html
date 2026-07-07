@@ -1,3 +1,33 @@
 <template>
-    
+    <div class="slds-box slds-box_small slds-theme_default slds-text-align_center">
+        <div class="slds-text-heading_small slds-m-bottom_small slds-truncate" title={item.Name}>
+            <strong>{item.Name}</strong>
+        </div>
+        
+        <div class="slds-m-bottom_small" style="height: 120px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+            <template lwc:if={item.Image__c}>
+                <img src={item.Image__c} alt={item.Name} style="max-height: 120px; max-width: 100%; object-fit: contain;"/>
+            </template>
+            <template lwc:else>
+                <div class="slds-text-color_weak">No Image</div>
+            </template>
+        </div>
+        
+        <div class="slds-m-bottom_medium slds-truncate" title={item.Description__c}>
+            {item.Description__c}
+        </div>
+        
+        <div class="slds-text-title_caps slds-m-bottom_medium slds-text-color_success">
+            Price: ${item.Price__c} | Available: {item.AvailableQuantity__c}
+        </div>
+        
+        <div class="slds-grid slds-grid_align-center slds-gutters">
+            <div class="slds-col">
+                <lightning-button label="Details" onclick={handleDetails}></lightning-button>
+            </div>
+            <div class="slds-col">
+                <lightning-button label="Add" variant="brand" onclick={handleAdd} disabled={isOutOfStock}></lightning-button>
+            </div>
+        </div>
+    </div>
 </template>
