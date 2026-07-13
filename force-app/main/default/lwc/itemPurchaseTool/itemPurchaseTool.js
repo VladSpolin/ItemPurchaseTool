@@ -214,7 +214,7 @@ export default class ItemPurchaseTool extends NavigationMixin(LightningElement) 
             unitCost: item.unitCost
         })));
 
-        checkout({ accountId: this.recordId, cartJson: cartJsonString })
+        checkout({ accountId: this.recordId, cartItemsJson: cartJsonString })
         .then((purchaseId) => {
             this.dispatchEvent(new ShowToastEvent({
                 title: 'Success!',
